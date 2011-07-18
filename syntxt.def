@@ -1,0 +1,14 @@
+; File structure of Synergy message file: syntxt.ism
+structure syntxt
+    facility	,a3	;  Facility code 
+    textnum	,d5	;  Message number 
+    mnemonic	,a10	;  Message name
+    text	,a200	;  Message text
+endstructure
+
+; Facilities control structure
+structure facilities
+    facs	,a3
+    index	,i4
+endstructure
+

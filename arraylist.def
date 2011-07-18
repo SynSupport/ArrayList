@@ -1,0 +1,44 @@
+;
+; The following MUST be defined prior to including this file
+;	LIST_ITEM = the name of your structure
+;	LIST_NAME = the name of your ArrayList class 
+;
+namespace listns
+ class LIST_NAME extends ArrayList
+
+  ; ArrayList() constructor
+  public method LIST_NAME
+    parent()
+  proc
+    mreturn
+  endmethod
+
+  ; ArrayList(i) constructor
+  public method LIST_NAME
+    cnt, i
+    parent(cnt)
+  proc
+    mreturn
+  endmethod
+
+  ; Customized ArrayList Add() method
+  public method Add, i
+    ent, LIST_ITEM
+  proc
+    mreturn Add((Object)ent)
+  endmethod
+
+  ; Customized ArrayList indexer property
+  new public property indexer, @LIST_ITEM
+    ndx, i4
+  method get
+  proc
+     mreturn (@LIST_ITEM)parent[ndx]
+  endmethod
+  endproperty
+
+ endclass
+endnamespace
+
+.undefine LIST_NAME
+.undefine LIST_ITEM

@@ -1,0 +1,77 @@
+;******************************************************************************
+;
+; File:         $safeitemname$.dbl
+;
+; Type:         Class
+;
+; Description:  $description$
+;
+; Author:       $author$ ($username$)
+;
+; Created:      $date$
+;
+;*******************************************************************************
+
+import System.Collections
+import $namespace$
+
+namespace $namespace$
+
+	.include "$structure$" repository, structure="$structure$", end
+	;
+	;If your structure is not defined in the repository then you will need
+	;to remove this .include and replace it with a regular include of a file
+	;defining the structure you wish to use.  Note that the structure is a
+	;global structure and so MUST include an ENDSTRRUCTURE statement.
+	;
+	;For example:
+	;
+	;.include "INC:$structure$.def"
+
+	public class $safeitemname$ extends ArrayList
+	
+		;$safeitemname$() constructor
+		;
+		public method $safeitemname$
+			parent()
+		proc
+			mreturn
+		endmethod
+		
+		;$safeitemname$(i) constructor
+		;
+		public method $safeitemname$
+			required in capacity, i
+			parent(capacity)
+		proc
+			mreturn
+		endmethod
+		
+		;Overload the Add() method
+		;The Add() method in the ArrayList class accepts an untyped
+		;object (i.e. System.Object).  We want our class to accept a
+		;typed object (i.e. $namespace$.$structure$).  
+		;
+		public method Add, i
+			required in newitem, $structure$
+		proc
+			mreturn Add((Object)newitem)
+		endmethod
+		
+		;Replace the ArrayList indexer property
+		;The indexer property of the arrayList class returns an untyped
+		;item (i.e. System.Object).  We want our class to return a typed
+		;object (i.e. $namespace$.$structure$).
+		;
+		new public property indexer, @$structure$
+			required in index, i4
+			method get
+			proc
+				mreturn (@$structure$)parent[index]
+			endmethod
+		endproperty
+	
+	endclass
+
+endnamespace
+

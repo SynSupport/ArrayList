@@ -1,0 +1,101 @@
+;
+; Sample program illustrating the use of ArrayList in place of ^m
+; (^m version version)
+;
+; This program reads from the Synergy/DE message file (DBLDIR:syntxt.ism)
+; and creates 2 collections:  one of all the messages and another of each
+; type of message or facility - which includes RNT, CMP, RPT, etc).
+;
+; The message list (rhnd) contains the complete record with the syntxt layout
+; as declared in syntxt.def.  The facility list (fhnd) contains one record
+; for each 3 letter facility code and the starting index as declared by the
+; facilities structure in syntxt.def.  The last entry will be blank with an
+; index 1 greater than the last message.
+;
+; When executed, a prompt containing a list of facilities is displayed.
+; Upon choosing a facility, each message of that type is displayed followed by
+; the number of messages displayed at the end.  Pressing return at the prompt
+; exits the program.
+;
+
+.include "syntxt.def"
+
+record
+    rhnd	,i4		; Record list memory handle
+    fhnd	,i4		; Facility list memory handle
+    fac		,a3
+    fndx	,i4
+    ix		,i4
+    fcnt	,i4		; Record counter
+    rcnt	,i4		; Facility counter
+    rcap	,i4, 100	; Record memory capacity
+    fcap	,i4, 10		; Facility memory capacity
+proc
+    open(1, o, 'tt:')
+
+    open(2, i:i, 'DBLDIR:syntxt')
+    		; Allocate dynamic memory for each collection list
+    rhnd = %mem_proc(DM_ALLOC, ^size(syntxt)*rcap)
+    fhnd = %mem_proc(DM_ALLOC, ^size(facilities)*fcap)
+    repeat
+      begin
+	incr rcnt
+	if (rcnt.gt.rcap)	; Increase memory every 100
+	  begin
+	    rcap = rcap + 100
+	    rhnd = %mem_proc(DM_RESIZ, ^size(syntxt)*rcap, rhnd)
+	  end
+        reads(2, ^m(syntxt[rcnt], rhnd), eof)	; Add message to message list
+
+	if (fac.ne.^m(syntxt[rcnt].facility, rhnd))
+	  begin
+	    incr fcnt
+	    if (fcnt.gt.fcap)	; Increase memory every 10
+	      begin
+		fcap = fcap + 10
+		fhnd = %mem_proc(DM_RESIZ, ^size(facilities)*fcap, fhnd)
+	      end
+	    fac = ^m(syntxt[rcnt].facility, rhnd)
+	    ^m(facilities[fcnt].facs, fhnd) = fac   ; Add facility to the
+	    ^m(facilities[fcnt].index, fhnd) = rcnt ;  facility list
+	  end
+      end
+eof, 
+    incr fcnt
+    if (fcnt.gt.fcap)	; Increase if necessary
+      begin
+	fcap = fcap + 1
+	fhnd = %mem_proc(DM_RESIZ, ^size(facilities)*fcap, fhnd)
+      end
+    ^m(facilities[fcnt].facs, fhnd) = "zzz"    ; Add or "end" condition
+    ^m(facilities[fcnt].index, fhnd) = rcnt
+
+    writes(1, "Added " + %string(rcnt) + " entries")
+
+    repeat
+      begin
+	display(1, "Facility: ( ")
+	for ix from 1 thru fcnt - 1		; Display facilities
+	    display(1, ^m(facilities[ix].facs, fhnd), ' ')
+	display(1, ") ")
+	reads(1, fac)
+	if (fac.eq."   ")
+	   exitloop  
+
+	for fndx from 1 thru fcnt		; Find matching facility
+	  begin
+	    if (^m(facilities[fndx].facs, fhnd) .eq. fac)
+		exitloop
+	  end
+
+	if (fndx.eq.fcnt+1)			; Facility not found
+	    nextloop				;  try again
+
+		; Loop through the messages using the facility start index
+		; and display those through the next facility start index
+	for ix from ^m(facilities[fndx].index, fhnd) thru ^m(facilities[fndx+1].index, fhnd) - 1
+	    writes(1, %string(ix) + ": " + ^m(syntxt[ix].mnemonic, rhnd))
+
+	writes(1, "Count: " + %string(^m(facilities[fndx+1].index, fhnd) - ^m(facilities[fndx].index, fhnd)))
+      end
+end

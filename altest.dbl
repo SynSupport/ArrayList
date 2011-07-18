@@ -1,0 +1,90 @@
+;
+; Sample program illustrating the use of ArrayList in place of ^m
+; (ArrayList version)
+;
+; This program reads from the Synergy/DE message file (DBLDIR:syntxt.ism)
+; and creates 2 collections:  one of all the messages and another of each
+; type of message or facility - which includes RNT, CMP, RPT, etc).
+;
+; The message list (slist) contains the complete record with the syntxt layout
+; as declared in syntxt.def.  The facility list (flist) contains one record
+; for each 3 letter facility code and the starting index as declared by the
+; facilities structure in syntxt.def.  The last entry will be blank with an
+; index 1 greater than the last message.
+;
+; When executed, a prompt containing a list of facilities is displayed.
+; Upon choosing a facility, each message of that type is displayed followed by
+; the number of messages displayed at the end.  Pressing return at the prompt
+; exits the program.
+;
+
+import system.collections
+
+.include "syntxt.def"		; Declare syntxt and facilities structures
+
+; Declare the syntxtList class
+.define LIST_ITEM, syntxt
+.define LIST_NAME, syntxtList
+.include "arraylist.def"	
+
+; Declare the facList class
+.define LIST_ITEM, facilities
+.define LIST_NAME, facList
+.include "arraylist.def"
+
+main
+record
+    slist	,@syntxtList		; Messages list object handle
+    flist	,@facList		; Facilities list object handle
+    sfld	,syntxt			; syntxt structfield
+    sfac	,facilities		; facilities structfield
+    fac		,a3
+    fndx	,i4
+    ix		,i4
+proc
+    open(1, o, 'tt:')
+    slist = new syntxtList(100)		; Create special ArrayLists for
+    flist = new facList(10)		;  both collections
+
+    open(2, i:i, 'DBLDIR:syntxt')
+    repeat
+      begin
+	reads(2, sfld, eof)
+        ix = slist.add(sfld)		; Add the message to the slist
+
+	if (fac.ne.sfld.facility)	; New facility?
+	  begin
+	    fac = sfld.facility		; Make this the current facility
+	    sfac.facs = sfld.facility	; Load our facility structfield
+	    sfac.index = ix		;  with facility and starting index
+	    flist.add(sfac)		; Add the facility to flist
+	  end
+      end
+eof, 
+    sfac.facs = "zzz"			; Create our end condition
+    sfac.index = slist.count + 1
+    flist.add(sfac)			; Load our "end" facility entry
+
+    writes(1, "Added " + %string(slist.count) + " entries")
+
+    repeat
+      begin
+	display(1, "Facility: ( ")
+	for ix from 1 thru flist.count - 1	; Display all our facility
+	    display(1, flist[ix].facs, ' ')	;  names
+	display(1, ") ")
+	reads(1, fac)
+	if (fac.eq."   ")
+	   exitloop  
+
+	fndx = flist.indexOf((@a)fac)		; Find the facility in the
+	if (fndx .eq. -1)			;  flist using ArrayList method
+	    nextloop
+
+		; Loop through the messages using the facility start index
+		; and display those through the next facility start index
+	for ix from flist[fndx].index thru flist[fndx+1].index - 1
+	    writes(1, %string(ix) + ": " + slist[ix].mnemonic)
+	writes(1, "Count: " + %string(flist[fndx+1].index - flist[fndx].index))
+      end
+end

@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<!DOCTYPE SETemplate SYSTEM "http://www.slickedit.com/dtd/vse/setemplate/1.0/setemplate.dtd">
+<SETemplate Version="1.0" Type="Item">
+
+  <TemplateDetails>
+    <Name>Synergy/DE Collection Class</Name>
+    <Description>A Synergy/DE class which extends an ArrayList for a specific data structure</Description>
+    <SortOrder>0</SortOrder>
+    <DefaultName>MyCollection</DefaultName>
+  </TemplateDetails>
+  <TemplateContent>
+    <Files>
+      <File TargetFilename="$fileinputname$.dbl" ReplaceParameters="1">Collection.dbl</File>
+    </Files>
+    <Parameters>
+        <Parameter Name="description" Value="" Prompt="1" PromptString="Description" />
+        <Parameter Name="author" Value="" Prompt="1" PromptString="Author name" />
+        <Parameter Name="namespace" Value="" Prompt="1" PromptString="Namespace" />
+        <Parameter Name="structure" Value="" Prompt="1" PromptString="Structure name" />
+    </Parameters>
+  </TemplateContent>
+
+</SETemplate>
